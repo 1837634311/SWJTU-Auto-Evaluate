@@ -2,7 +2,7 @@
 // @name         西南交大教务系统一键评价助手
 // @namespace    http://tampermonkey.net/
 // @version      3.2
-// @description  极速完成所有课程评价。
+// @description  极速完成所有课程评价
 // @author       Antigravity
 // @match        https://jwc.swjtu.edu.cn/vatuu/AssessAction?setAction=list*
 // @match        https://jwc.swjtu.edu.cn/vatuu/AssessAction?setAction=viewAssess&sid=*
@@ -380,3 +380,4 @@
     main();
 
 })();
+
