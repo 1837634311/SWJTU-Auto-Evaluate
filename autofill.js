@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         西南交大教务系统一键评价助手
 // @namespace    http://tampermonkey.net/
-// @version      3.2
+// @version      3.3
 // @description  极速完成所有课程评价
 // @author       Antigravity
 // @match        https://jwc.swjtu.edu.cn/vatuu/AssessAction?setAction=list*
@@ -236,6 +236,17 @@
         },
 
         submitForm: () => {
+            // 提交前确保 allNum 已被正确赋值
+            // 网页的 allNum 在 window.onload 的 setTimeout 中设置，
+            // 如果脚本执行太早，allNum 仍为 0，会导致验证失败
+            if (typeof window.allNum !== 'undefined') {
+                const problemIds = document.querySelectorAll('input[name="problem_id"]');
+                if (problemIds.length > 0 && window.allNum < problemIds.length) {
+                    Utils.log(`修正 allNum: ${window.allNum} -> ${problemIds.length}`);
+                    window.allNum = problemIds.length;
+                }
+            }
+
             if (typeof window.goSubmitForm === 'function') {
                 window.goSubmitForm();
             } else {
@@ -319,6 +330,21 @@
             const queue = Utils.State.getQueue();
             const status = Utils.State.getStatus();
             UI.renderRunning(queue.length, `填写中 [${status}]`);
+
+            // 等待页面的 allNum 被正确赋值（window.onload 中的 setTimeout 33ms）
+            // 最多等待 2 秒，每 100ms 检查一次
+            for (let i = 0; i < 20; i++) {
+                if (typeof window.allNum !== 'undefined' && window.allNum > 0) break;
+                await Utils.sleep(100);
+            }
+            if (typeof window.allNum === 'undefined' || window.allNum === 0) {
+                Utils.log('⚠️ allNum 未初始化，尝试手动设置...');
+                const problemIds = document.querySelectorAll('input[name="problem_id"]');
+                if (problemIds.length > 0) {
+                    window.allNum = problemIds.length;
+                    Utils.log(`手动设置 allNum = ${problemIds.length}`);
+                }
+            }
 
             // Phase 1: Fail it
             if (status === 'IDLE' || status === 'ATTEMPT_1') {
